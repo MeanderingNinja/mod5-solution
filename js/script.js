@@ -9,7 +9,6 @@ $(function () { // Same as document.addEventListener("DOMContentLoaded"...
   });
 });
 
-(function (global) {
 
 var dc = {};
 
@@ -23,7 +22,7 @@ var menuItemsUrl =
 var menuItemsTitleHtml = "snippets/menu-items-title.html";
 var menuItemHtml = "snippets/menu-item.html";
 
-// Convenience function for inserting innerHTML for 'select'
+// Helper function for inserting innerHTML for 'select'
 var insertHtml = function (selector, html) {
   var targetElem = document.querySelector(selector);
   targetElem.innerHTML = html;
@@ -36,6 +35,7 @@ var showLoading = function (selector) {
   insertHtml(selector, html);
 };
 
+// Helper function
 // Return substitute of '{{propName}}'
 // with propValue in given 'string'
 var insertProperty = function (string, propName, propValue) {
@@ -45,6 +45,7 @@ var insertProperty = function (string, propName, propValue) {
   return string;
 };
 
+// Helper function
 // Remove the class 'active' from home and switch to Menu button
 var switchMenuToActive = function () {
   // Remove 'active' from home button
@@ -63,48 +64,49 @@ var switchMenuToActive = function () {
 // On page load (before images or CSS)
 document.addEventListener("DOMContentLoaded", function (event) {
 
-// TODO: STEP 0: Look over the code from
-// *** start ***
-// to
-// *** finish ***
-// below.
-// We changed this code to retrieve all categories from the server instead of
-// simply requesting home HTML snippet. We now also have another function
-// called buildAndShowHomeHTML that will receive all the categories from the server
-// and process them: choose random category, retrieve home HTML snippet, insert that
-// random category into the home HTML snippet, and then insert that snippet into our
-// main page (index.html).
-//
-// TODO: STEP 1: Substitute [...] below with the *value* of the function buildAndShowHomeHTML,
-// so it can be called when server responds with the categories data.
+  // TODO: STEP 0: Look over the code from
+  // *** start ***
+  // to
+  // *** finish ***
+  // below.
+  // We changed this code to retrieve all categories from the server instead of
+  // simply requesting home HTML snippet. We now also have another function
+  // called buildAndShowHomeHTML that will receive all the categories from the server
+  // and process them: choose random category, retrieve home HTML snippet, insert that
+  // random category into the home HTML snippet, and then insert that snippet into our
+  // main page (index.html).
+  //
+  // TODO: STEP 1: Substitute [...] below with the *value* of the function buildAndShowHomeHTML,
+  // so it can be called when server responds with the categories data.
 
-// *** start ***
-// On first load, show home view
-showLoading("#main-content");
-$ajaxUtils.sendGetRequest(
-  allCategoriesUrl,
-  [...], // ***** <---- TODO: STEP 1: Substitute [...] ******
-  true); // Explicitly setting the flag to get JSON from server processed into an object literal
+  // *** start ***
+  // On first load, show home view
+  showLoading("#main-content");
+  ajaxUtils.sendGetRequest(
+    allCategoriesUrl,
+    buildAndShowHomeHTML, // ***** <---- E:20221031: Done: STEP 1: Substitute [...] ******
+    true); // Explicitly setting the flag to get JSON from server processed into an object literal
 });
 // *** finish **
 
 
 // Builds HTML for the home page based on categories array
 // returned from the server.
-function buildAndShowHomeHTML (categories) {
+function buildAndShowHomeHTML(categories) {
 
   // Load home snippet page
-  $ajaxUtils.sendGetRequest(
+  ajaxUtils.sendGetRequest(
     homeHtmlUrl,
     function (homeHtml) {
 
-      // TODO: STEP 2: Here, call chooseRandomCategory, passing it retrieved 'categories'
+      // E: 20221031: Done: STEP 2: Here, call chooseRandomCategory, passing it retrieved 'categories'
       // Pay attention to what type of data that function returns vs what the chosenCategoryShortName
       // variable's name implies it expects.
-      // var chosenCategoryShortName = ....
+      let chosenCategoryShortName = chooseRandomCategory(categories).short_name;
+      console.log("chosenCategoryShortName is " + (typeof chosenCategoryShortName));
 
 
-      // TODO: STEP 3: Substitute {{randomCategoryShortName}} in the home html snippet with the
+      // E: 20221031: Done: STEP 3: Substitute {{randomCategoryShortName}} in the home html snippet with the
       // chosen category from STEP 2. Use existing insertProperty function for that purpose.
       // Look through this code for an example of how to do use the insertProperty function.
       // WARNING! You are inserting something that will have to result in a valid Javascript
@@ -115,13 +117,14 @@ function buildAndShowHomeHTML (categories) {
       // Hint: you need to surround the chosen category short name with something before inserting
       // it into the home html snippet.
       //
-      // var homeHtmlToInsertIntoMainPage = ....
+      let homeHtmlToInsertIntoMainPage = insertProperty(homeHtml, "randomCategoryShortName", "'" + chosenCategoryShortName + "'");
+      console.log(homeHtmlToInsertIntoMainPage);
 
 
-      // TODO: STEP 4: Insert the produced HTML in STEP 3 into the main page
+      // E:20221031 Done: STEP 4: Insert the produced HTML in STEP 3 into the main page
       // Use the existing insertHtml function for that purpose. Look through this code for an example
       // of how to do that.
-      // ....
+      insertHtml("#main-content", homeHtmlToInsertIntoMainPage);
 
     },
     false); // False here because we are getting just regular HTML from the server, so no need to process JSON.
@@ -129,7 +132,7 @@ function buildAndShowHomeHTML (categories) {
 
 
 // Given array of category objects, returns a random category object.
-function chooseRandomCategory (categories) {
+function chooseRandomCategory(categories) {
   // Choose a random index into the array (from 0 inclusively until array length (exclusively))
   var randomArrayIndex = Math.floor(Math.random() * categories.length);
 
@@ -141,7 +144,7 @@ function chooseRandomCategory (categories) {
 // Load the menu categories view
 dc.loadMenuCategories = function () {
   showLoading("#main-content");
-  $ajaxUtils.sendGetRequest(
+  ajaxUtils.sendGetRequest(
     allCategoriesUrl,
     buildAndShowCategoriesHTML);
 };
@@ -151,7 +154,7 @@ dc.loadMenuCategories = function () {
 // 'categoryShort' is a short_name for a category
 dc.loadMenuItems = function (categoryShort) {
   showLoading("#main-content");
-  $ajaxUtils.sendGetRequest(
+  ajaxUtils.sendGetRequest(
     menuItemsUrl + categoryShort,
     buildAndShowMenuItemsHTML);
 };
@@ -159,13 +162,13 @@ dc.loadMenuItems = function (categoryShort) {
 
 // Builds HTML for the categories page based on the data
 // from the server
-function buildAndShowCategoriesHTML (categories) {
+function buildAndShowCategoriesHTML(categories) {
   // Load title snippet of categories page
-  $ajaxUtils.sendGetRequest(
+  ajaxUtils.sendGetRequest(
     categoriesTitleHtml,
     function (categoriesTitleHtml) {
       // Retrieve single category snippet
-      $ajaxUtils.sendGetRequest(
+      ajaxUtils.sendGetRequest(
         categoryHtml,
         function (categoryHtml) {
           // Switch CSS class active to menu button
@@ -173,8 +176,8 @@ function buildAndShowCategoriesHTML (categories) {
 
           var categoriesViewHtml =
             buildCategoriesViewHtml(categories,
-                                    categoriesTitleHtml,
-                                    categoryHtml);
+              categoriesTitleHtml,
+              categoryHtml);
           insertHtml("#main-content", categoriesViewHtml);
         },
         false);
@@ -186,8 +189,8 @@ function buildAndShowCategoriesHTML (categories) {
 // Using categories data and snippets html
 // build categories view HTML to be inserted into page
 function buildCategoriesViewHtml(categories,
-                                 categoriesTitleHtml,
-                                 categoryHtml) {
+  categoriesTitleHtml,
+  categoryHtml) {
 
   var finalHtml = categoriesTitleHtml;
   finalHtml += "<section class='row'>";
@@ -202,8 +205,8 @@ function buildCategoriesViewHtml(categories,
       insertProperty(html, "name", name);
     html =
       insertProperty(html,
-                     "short_name",
-                     short_name);
+        "short_name",
+        short_name);
     finalHtml += html;
   }
 
@@ -215,13 +218,13 @@ function buildCategoriesViewHtml(categories,
 
 // Builds HTML for the single category page based on the data
 // from the server
-function buildAndShowMenuItemsHTML (categoryMenuItems) {
+function buildAndShowMenuItemsHTML(categoryMenuItems) {
   // Load title snippet of menu items page
-  $ajaxUtils.sendGetRequest(
+  ajaxUtils.sendGetRequest(
     menuItemsTitleHtml,
     function (menuItemsTitleHtml) {
       // Retrieve single menu item snippet
-      $ajaxUtils.sendGetRequest(
+      ajaxUtils.sendGetRequest(
         menuItemHtml,
         function (menuItemHtml) {
           // Switch CSS class active to menu button
@@ -229,8 +232,8 @@ function buildAndShowMenuItemsHTML (categoryMenuItems) {
 
           var menuItemsViewHtml =
             buildMenuItemsViewHtml(categoryMenuItems,
-                                   menuItemsTitleHtml,
-                                   menuItemHtml);
+              menuItemsTitleHtml,
+              menuItemHtml);
           insertHtml("#main-content", menuItemsViewHtml);
         },
         false);
@@ -242,17 +245,17 @@ function buildAndShowMenuItemsHTML (categoryMenuItems) {
 // Using category and menu items data and snippets html
 // build menu items view HTML to be inserted into page
 function buildMenuItemsViewHtml(categoryMenuItems,
-                                menuItemsTitleHtml,
-                                menuItemHtml) {
+  menuItemsTitleHtml,
+  menuItemHtml) {
 
   menuItemsTitleHtml =
     insertProperty(menuItemsTitleHtml,
-                   "name",
-                   categoryMenuItems.category.name);
+      "name",
+      categoryMenuItems.category.name);
   menuItemsTitleHtml =
     insertProperty(menuItemsTitleHtml,
-                   "special_instructions",
-                   categoryMenuItems.category.special_instructions);
+      "special_instructions",
+      categoryMenuItems.category.special_instructions);
 
   var finalHtml = menuItemsTitleHtml;
   finalHtml += "<section class='row'>";
@@ -267,32 +270,32 @@ function buildMenuItemsViewHtml(categoryMenuItems,
       insertProperty(html, "short_name", menuItems[i].short_name);
     html =
       insertProperty(html,
-                     "catShortName",
-                     catShortName);
+        "catShortName",
+        catShortName);
     html =
       insertItemPrice(html,
-                      "price_small",
-                      menuItems[i].price_small);
+        "price_small",
+        menuItems[i].price_small);
     html =
       insertItemPortionName(html,
-                            "small_portion_name",
-                            menuItems[i].small_portion_name);
+        "small_portion_name",
+        menuItems[i].small_portion_name);
     html =
       insertItemPrice(html,
-                      "price_large",
-                      menuItems[i].price_large);
+        "price_large",
+        menuItems[i].price_large);
     html =
       insertItemPortionName(html,
-                            "large_portion_name",
-                            menuItems[i].large_portion_name);
+        "large_portion_name",
+        menuItems[i].large_portion_name);
     html =
       insertProperty(html,
-                     "name",
-                     menuItems[i].name);
+        "name",
+        menuItems[i].name);
     html =
       insertProperty(html,
-                     "description",
-                     menuItems[i].description);
+        "description",
+        menuItems[i].description);
 
     // Add clearfix after every second menu item
     if (i % 2 !== 0) {
@@ -310,8 +313,8 @@ function buildMenuItemsViewHtml(categoryMenuItems,
 
 // Appends price with '$' if price exists
 function insertItemPrice(html,
-                         pricePropName,
-                         priceValue) {
+  pricePropName,
+  priceValue) {
   // If not specified, replace with empty string
   if (!priceValue) {
     return insertProperty(html, pricePropName, "");
@@ -325,8 +328,8 @@ function insertItemPrice(html,
 
 // Appends portion name in parens if it exists
 function insertItemPortionName(html,
-                               portionPropName,
-                               portionValue) {
+  portionPropName,
+  portionValue) {
   // If not specified, return original string
   if (!portionValue) {
     return insertProperty(html, portionPropName, "");
@@ -338,6 +341,5 @@ function insertItemPortionName(html,
 }
 
 
-global.$dc = dc;
 
-})(window);
+
